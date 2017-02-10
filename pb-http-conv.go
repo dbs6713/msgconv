@@ -10,11 +10,11 @@ import (
 	"bytes"
 	"errors"
 	"encoding/json"
+	"io"
 	"io/ioutil"
 	"net/http"
 
 	"github.com/golang/protobuf/proto"
-	"io"
 )
 
 type PBHTTPConverter struct {
@@ -54,25 +54,25 @@ func (p *PBHTTPConverter)GetMediaType(mediatype string) (int, error) {
 	return 0, errors.New("media type not supported")
 }
 
-func (p *PBHTTPConverter)ReadRequest(req interface{}, v interface{}) error {
-	body, err := ioutil.ReadAll(req.(http.Request).Body)
+func (p *PBHTTPConverter)ReadRequest(req *http.Request, msg interface{}) error {
+	body, err := ioutil.ReadAll(req.Body)
 	if err != nil {
 		return err
 	}
-	acceptType, err := p.GetMediaType(string(req.(http.Request).Header.Get(Accept)))
+	acceptType, err := p.GetMediaType(string(req.Header.Get(Accept)))
 	if err != nil {
 		return err
 	}
-	if req.(http.Request).Method == http.MethodDelete || req.(http.Request).Method == http.MethodGet {
+	if req.Method == http.MethodDelete || req.Method == http.MethodGet {
 		return nil
 	}
 
 	switch acceptType {
 	case MediatypeJSON:
-		err = json.Unmarshal(body, &v)
+		err = json.Unmarshal(body, &msg)
 		break
 	case MediatypePB:
-		err = proto.Unmarshal(body, v.(proto.Message))
+		err = proto.Unmarshal(body, msg.(proto.Message))
 		break
 	default:
 		return errors.New("unable to unmarshal message")
@@ -83,22 +83,23 @@ func (p *PBHTTPConverter)ReadRequest(req interface{}, v interface{}) error {
 	return nil
 }
 
-func (p *PBHTTPConverter)ReadResponse(resp interface{}, v interface{}) error {
-	body, err := ioutil.ReadAll(resp.(http.Response).Body)
-	contentType, err := p.GetMediaType(resp.(http.Response).Header.Get(ContentType))
+func (p *PBHTTPConverter)ReadResponse(resp *http.Response, msg interface{}) error {
+	body, err := ioutil.ReadAll(resp.Body)
+	defer resp.Body.Close()
+	contentType, err := p.GetMediaType(resp.Header.Get(ContentType))
 	if err != nil {
 		return err
 	}
 
 	switch contentType {
 	case MediatypeJSON:
-		err = json.Unmarshal(body, &v)
+		err = json.Unmarshal(body, &msg)
 		break
 	case MediatypePB:
-		err = proto.Unmarshal(body, v.(proto.Message))
+		err = proto.Unmarshal(body, msg.(proto.Message))
 		break
 	default:
-		return errors.New("unable to unmarshal message")
+		return errors.New("content-type not supported")
 	}
 	if err != nil {
 		return err
@@ -106,7 +107,7 @@ func (p *PBHTTPConverter)ReadResponse(resp interface{}, v interface{}) error {
 	return nil
 }
 
-func (p *PBHTTPConverter)WriteRequest(method string, URL string, contentType int, msg proto.Message) (interface{}, error) {
+func (p *PBHTTPConverter)WriteRequest(method string, URL string, contentType int, msg proto.Message) (*http.Request, error) {
 	var data []byte
 	var err error
 	var mediaType string
@@ -121,7 +122,7 @@ func (p *PBHTTPConverter)WriteRequest(method string, URL string, contentType int
 		data, err = proto.Marshal(msg)
 		break
 	default:
-		return nil, errors.New("unable to marshal message")
+		return nil, errors.New("content-type not supported")
 	}
 	if err != nil {
 		return nil, err
@@ -138,7 +139,7 @@ func (p *PBHTTPConverter)WriteRequest(method string, URL string, contentType int
 	return req, nil
 }
 
-func (p *PBHTTPConverter)WriteResponse(contentType int, msg proto.Message) (interface{}, error) {
+func (p *PBHTTPConverter)WriteResponse(contentType int, msg proto.Message) (*http.Response, error) {
 	var data []byte
 	var err error
 	var mediaType string
@@ -153,12 +154,19 @@ func (p *PBHTTPConverter)WriteResponse(contentType int, msg proto.Message) (inte
 		data, err = proto.Marshal(msg)
 		break
 	default:
-		return nil, errors.New("unable to marshal message")
+		return nil, errors.New("content-type not supported")
 	}
 	if err != nil {
 		return nil, err
 	}
-	resp := http.Response{}
+	resp := http.Response{
+		Status: "200 OK",
+		StatusCode: 200,
+		Proto: "HTTP/1.1",
+		ProtoMajor: 1,
+		ProtoMinor: 1,
+	}
+	resp.Header = http.Header{}
 	resp.Header.Set(Accept, mediaType)
 	resp.Header.Set(ContentType, mediaType+"; charset="+CharsetText[p.Charset])
 	resp.Header.Set(ContentLength, string(len(data)))
@@ -168,5 +176,5 @@ func (p *PBHTTPConverter)WriteResponse(contentType int, msg proto.Message) (inte
 		rc = ioutil.NopCloser(rc)
 	}
 	resp.Body = rc
-	return resp, nil
+	return &resp, nil
 }

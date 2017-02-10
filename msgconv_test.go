@@ -15,6 +15,33 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestCleanMediaType_Fail(t *testing.T) {
+	// arrange
+	c := "Content"
+	// act
+	v := CleanMediaType(c)
+	// assert
+	assert.Equal(t, "Content", v)
+}
+
+func TestCleanMediaType_Success0(t *testing.T) {
+	// arrange
+	c := "Content-Type:application/json"
+	// act
+	v := CleanMediaType(c)
+	// assert
+	assert.Equal(t, "Content-Type:application/json", v)
+}
+
+func TestCleanMediaType_Success1(t *testing.T) {
+	// arrange
+	c := "Accept:application/json;Content-Type:application/json"
+	// act
+	v := CleanMediaType(c)
+	// assert
+	assert.Equal(t, "Accept:application/json", v)
+}
+
 func TestMsgConv(t *testing.T) {
 	assert.Equal(t, "ISO-8859-1", CharsetText[CharsetIso88591])
 	assert.Equal(t, "US-ASCII", CharsetText[CharsetUsAscii])
