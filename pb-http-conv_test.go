@@ -265,6 +265,28 @@ func TestPBHTTPConverter_WriteResponse_Fail(t *testing.T) {
 	assert.Equal(t, "content-type not supported", err.Error())
 }
 
+func TestPBHTTPConverter_WriteBody_JSON(t *testing.T) {
+	// arrange
+	pm := &jsonpb.Simple{OString: proto.String("test")}
+	c := NewPBHTTPConverter()
+	// act
+	b, err := c.WriteBody(MediatypeJSON, pm)
+	// assert
+	assert.Nil(t, err)
+	assert.Equal(t, `{"o_string":"test"}`, string(b))
+}
+
+func TestPBHTTPConverter_WriteBody_PB(t *testing.T) {
+	// arrange
+	pm := &jsonpb.Simple{OString: proto.String("test")}
+	c := NewPBHTTPConverter()
+	// act
+	b, err := c.WriteBody(MediatypePB, pm)
+	// assert
+	assert.Nil(t, err)
+	assert.Equal(t, "R\x04test", string(b))
+}
+
 func TestPBHTTPConverter_WriteResponse_JSON(t *testing.T) {
 	// arrange
 	pm := &jsonpb.Simple{OString: proto.String("test")}

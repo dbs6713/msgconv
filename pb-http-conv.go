@@ -139,6 +139,26 @@ func (p *PBHTTPConverter)WriteRequest(method string, URL string, contentType int
 	return req, nil
 }
 
+func (p *PBHTTPConverter)WriteBody(contentType int, msg proto.Message) ([]byte, error) {
+	var data []byte
+	var err error
+
+	switch contentType {
+	case MediatypeJSON:
+		data, err = json.Marshal(msg)
+		break
+	case MediatypePB:
+		data, err = proto.Marshal(msg)
+		break
+	default:
+		return nil, errors.New("content-type not supported")
+	}
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
+}
+
 func (p *PBHTTPConverter)WriteResponse(contentType int, msg proto.Message) (*http.Response, error) {
 	var data []byte
 	var err error
