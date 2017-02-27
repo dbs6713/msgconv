@@ -3,6 +3,9 @@ Change Log
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org)
 
+## [0.4.0](https://github.com/donbstringham/msgconv/compare/0.3.0...0.4.0) - 2017-02-27
+- Removed all fasthttp components 
+
 ## [0.3.0](https://github.com/donbstringham/msgconv/compare/0.2.0...0.3.0) - 2017-02-14
 - Added a `WriteBody` method to the `net/http` converter
 
