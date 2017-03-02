@@ -13,6 +13,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 
 	"github.com/golang/protobuf/proto"
 )
@@ -133,9 +134,9 @@ func (p *PBHTTPConverter)WriteRequest(method string, URL string, contentType int
 		return nil, err
 	}
 	req.Header.Set(Accept, mediaType)
+	req.Header.Set(ContentLength, strconv.Itoa(len(data)))
 	req.Header.Set(ContentType, mediaType+"; charset="+CharsetText[p.Charset])
 	req.Header.Set(CacheControl, "no-cache")
-	req.Header.Set(ContentLength, string(len(data)))
 	return req, nil
 }
 
@@ -189,7 +190,7 @@ func (p *PBHTTPConverter)WriteResponse(contentType int, msg proto.Message) (*htt
 	resp.Header = http.Header{}
 	resp.Header.Set(Accept, mediaType)
 	resp.Header.Set(ContentType, mediaType+"; charset="+CharsetText[p.Charset])
-	resp.Header.Set(ContentLength, string(len(data)))
+	resp.Header.Set(ContentLength, strconv.Itoa(len(data)))
 	r := bytes.NewReader(data)
 	rc, ok := io.Reader(r).(io.ReadCloser)
 	if !ok && r != nil {
