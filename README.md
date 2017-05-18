@@ -7,12 +7,14 @@ A strategy interface package that specifies a converter
 that converts to and from fasthttp HTTP requests and
 responses.  **NOTE**: This package is dependant on
 - [net/http](https://github.com/golang/go/tree/master/src/net/http)
-- [fasthttp package](http://github.com/valyala/fasthttp)
-- [fasthttprouter package](http://github.com/buaazp/fasthttprouter)
+
+### Status
+
+[![](https://codescene.io/projects/1269/status.svg) Get more details at **codescene.io**.](https://codescene.io/projects/1269/jobs/latest-successful/results)
 
 ### Credits
 
-Don B. Stringham - <donbstringham@gmail.com>
+Don B. Stringham - <donbstringham@icloud.com>
 
 ### License
 
