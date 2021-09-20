@@ -1,4 +1,4 @@
-# Author: Don B. Stringham <donbstringham@gmail.com>
+# Author: Don B. Stringham <donbstringham@icloud.com>
 
 # Go parameters
 GOCMD=go
